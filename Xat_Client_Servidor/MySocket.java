@@ -1,28 +1,32 @@
-import java.net.*;
-import java.io.*;
+import java.net.Socket;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.IOException;
 
-public class MySocket{
+public class MySocket extends Socket{
+
+    private Socket socket;
+    private BufferedReader input;
+    private PrintWriter output;
     
-    public Socket socket;
-    BufferedReader input;
-    PrintWriter output;
-
-    public MySocket(int port, String host){
+    public MySocket(String host, int port) throws IOException{
         try {
-            this.socket = new Socket(host,port);
-            this.input = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
-            this.output = new PrintWriter(this.socket.getOutputStream());
-        } catch (Exception e) {
-            System.out.println("Error al iniciar el socket");
+            socket = new Socket(host,port);
+            input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            output = new PrintWriter(socket.getOutputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
-    public MySocket(Socket s){
+
+    public MySocket(Socket s) throws IOException{
         try {
-            this.socket = s;
-            this.input = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
-            this.output = new PrintWriter(this.socket.getOutputStream());
-        } catch (Exception e) {
-            System.out.println("Error al iniciar el socket");
+            socket = s;
+            input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            output = new PrintWriter(socket.getOutputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -31,21 +35,25 @@ public class MySocket{
          this.input.close();
          this.output.close();
          this.socket.close();
-       } catch (Exception e) {
-           //TODO: handle exception
+       } catch (IOException e) {
+           e.printStackTrace();
        } 
     }
 
-    public String readString(){
+    public String readString() throws IOException{
         String s = null;
         try {
             s = this.input.readLine();
-        } catch (Exception e) {
-            
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         return s;
     }
     public void writeString(String s){
         this.output.println(s);
+    }
+
+    public void flush(){
+        this.output.flush();
     }
 }

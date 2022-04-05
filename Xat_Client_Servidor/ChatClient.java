@@ -1,36 +1,54 @@
 import java.io.*;
+import java.util.Scanner;
 
 public class ChatClient {
-    
-    private MySocket sc;
+    public static void main(String[] args){
+      final MySocket socket;
+      final BufferedReader in;
+      final PrintWriter out;
+      try (Scanner sc = new Scanner(System.in)) {
+        try{
+          socket = new MySocket("127.0.0.1",5000);
+          out = new PrintWriter(socket.getOutputStream());
+          in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-    public ChatClient( int port, String host){
-        this.sc = MySocket(port,host);
+          Thread sender = new Thread(new Runnable(){
+              String msg;
+             
+              @Override
+              public void run(){
+                while(true){
+                  msg = sc.nextLine();
+                  out.println(msg);
+                  out.flush();
+                }
+              }
+          });
+          sender.start();
 
-        //Input Thread 
-        new Thread() {
+          Thread receiver = new Thread(new Runnable(){
+            String msg;
+            @Override
             public void run(){
-              String line;
               try{
-                while((line=sc.readString())!=null){
-                    sc.writeString(line);
+                msg = in.readLine();
+                while(msg!=null){
+                  System.out.println("Server: "+msg);
+                  msg = in.readLine();
                 }
-               sc.close();
-              }catch(IOException ex){
-                ex.printStackTrace();
-                }
-    
-            }
-         }.start();
-        //Output Thread
-        new Thread() {
-            public void run(){
-              String line;
-              while((line=sc.readString())!=null){
-                  sc.writeString(line);
+                System.out.println("Server out of service");
+                out.close();
+                socket.close();
+              }catch (IOException e){
+                e.printStackTrace();
               }
             }
-         }.start();
-    }
 
+          });
+          receiver.start();
+        }catch(IOException e){
+          e.printStackTrace();
+        }
+      } 
+    }
 }
