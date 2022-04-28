@@ -6,6 +6,7 @@ class Room
 		@creator = creatorName
 		@participants = Array.new
 		@participants << creatorName
+		@messages = Array.new
 	end
 	
 	def getRoomDetails (client)
@@ -32,5 +33,13 @@ class Room
 	
 	def contains(participant)
 		@participants.include?(participant)
+	end
+	
+	def addMessage(username, message)
+		@messages << "#{username}: #{message}\n"
+	end
+	
+	def printMessage
+		@messages.last
 	end
 end
