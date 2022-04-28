@@ -1,10 +1,13 @@
+$LOAD_PATH << '.'
+
 require "socket"
+require "./Room"
 
 class Server
     
-    def initialize(port, ip)
+    def initialize(ip, port)
         @server = TCPServer.open(ip,port)
-        @connections = Hash.new
+	@connections = Hash.new
         @rooms = Hash.new
         @clients = Hash.new
         @connections[:server] = @server
@@ -13,25 +16,50 @@ class Server
         run
     end
 
-    connections: {
-        clients: {client_name: {attributes}, ...},
-        rooms: { room_name: [client_name], ...}
-    }
-
     def run
         loop {
             Thread.start(@server.accept) do |client|
-                nick_name = client.gets.chomp.to_sym
+    		nickName = client.gets.chomp.to_sym
                 @connections[:clients].each do |other_name, other_client|
-                    if nick_name == other_name || client == other_client
-                        client.puts "This username already exist"
+                    if nickName == other_name
+                        client.puts "This username already exist\n"
                         Thread.kill self
-                    end
+                    elsif client == other_client
+                    	client.puts "This client is already running\n"
+                        Thread.kill self
+                       end
                 end
-                puts "#{nick_name} #{client}"
-                @connection[:clients][nick_name] = client
-                client.puts "Connection estabilshed. Thank you for joining! Happy chatting"
-                listen_user_messages(nick_name, client)
+                puts "#{nickName} has joined the chat. #{client}\n"
+                @connections[:clients][nickName] = client
+                client.puts "Would you like to join/create a room? (join/create/no): "
+        	ans = client.gets.chomp
+        	if ans == "create"
+        		client.puts "Please type in the name of the room you want to create: "
+       			roomName = client.gets.chomp.to_sym
+     			room = Room.new(@rooms.length, roomName, nickName)
+     			clients = Array.new
+     			clients << client
+     			@connections[:rooms][room] = clients
+     			puts "The room #{roomName} has been created by #{nickName}"
+     			roomList(client)	
+     		elsif ans == "join"
+     			client.puts "Here you have the list of availabke rooms: "
+     			roomList(client)
+     			client.puts "Which room would you like to join? Type in the room name please: "
+     			roomName = client.gets.chomp.to_sym
+     			@connections[:rooms].each do |room, clients|
+     				if room.getRoomName == roomName
+     					clients = @connections[:rooms][room]
+     					clients << client
+     					room.addParticipants (nickName)
+     					@connections[:rooms][room] = clients
+     					client.puts "You have been added to the room #{roomName}. Enjoy your chatting!\n"
+     				end
+     			end
+     		else
+      			client.puts "Connection estabilshed. Thank you for joining! Happy chatting\n"
+       		end
+                listen_user_messages(nickName, client)
             end
         }.join
     end
@@ -39,15 +67,22 @@ class Server
     def listen_user_messages (username, client)
         loop{
             msg = client.gets.chomp
-            @connections[:clients].each do |other_name, other_client|
-                unless other_name == username
-                    other_client.puts "#{username.to_s}: #{msg}"
-                end
+            @connections[:room].each do |room, clients|
+            	clients.each do |c|
+            		unless c == client
+            			c.puts "#{username.to_s}: #{msg}"
+            		end
+            	end
             end
         }
     end
-
+    
+    def roomList(client)
+    	@connections[:rooms].each do |room, clients|
+        	room.getRoomDetails(client)
+    	end
+    end
+    
 end
 server = Server.new("localhost", 5050)
-server.run
 
