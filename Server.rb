@@ -37,9 +37,9 @@ class Server
         		client.puts "Please type in the name of the room you want to create: "
        			roomName = client.gets.chomp.to_sym
      			room = Room.new(@rooms.length, roomName, nickName)
-     			clients = Array.new
-     			clients << client
-     			@connections[:rooms][room] = clients
+     			participants = Array.new
+     			participants << client
+     			@connections[:rooms][room] = participants
      			puts "The room #{roomName} has been created by #{nickName}"
      			roomList(client)	
      		elsif ans == "join"
@@ -47,12 +47,11 @@ class Server
      			roomList(client)
      			client.puts "Which room would you like to join? Type in the room name please: "
      			roomName = client.gets.chomp.to_sym
-     			@connections[:rooms].each do |room, clients|
+     			@connections[:rooms].each do |room, participants|
      				if room.getRoomName == roomName
-     					clients = @connections[:rooms][room]
-     					clients << client
+     					participants << client
      					room.addParticipants (nickName)
-     					@connections[:rooms][room] = clients
+     					@connections[:rooms][room] = participants
      					client.puts "You have been added to the room #{roomName}. Enjoy your chatting!\n"
      				end
      			end
@@ -67,10 +66,12 @@ class Server
     def listen_user_messages (username, client)
         loop{
             msg = client.gets.chomp
-            @connections[:room].each do |room, clients|
-            	clients.each do |c|
-            		unless c == client
-            			c.puts "#{username.to_s}: #{msg}"
+            @connections[:rooms].each do |room, participants|
+            	if room.contains(username)
+            		participants.each do |p|
+            			unless p == client
+            				p.puts "#{username.to_s}: #{msg}"
+            			end
             		end
             	end
             end
@@ -78,7 +79,7 @@ class Server
     end
     
     def roomList(client)
-    	@connections[:rooms].each do |room, clients|
+    	@connections[:rooms].each do |room, participants|
         	room.getRoomDetails(client)
     	end
     end

@@ -29,4 +29,8 @@ class Room
 	def addParticipants(participant)
 		@participants << participant
 	end
+	
+	def contains(participant)
+		@participants.include?(participant)
+	end
 end
