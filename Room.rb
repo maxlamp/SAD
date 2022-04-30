@@ -24,7 +24,7 @@ class Room
 	end
 	
 	def getRoomName
-		@roomName
+		return @roomName
 	end
 	
 	def addParticipants(participant)
@@ -32,7 +32,7 @@ class Room
 	end
 	
 	def contains(participant)
-		@participants.include?(participant)
+		return @participants.include?(participant)
 	end
 	
 	def addMessage(username, message)
@@ -40,6 +40,7 @@ class Room
 	end
 	
 	def printMessage
-		@messages.last
+		return @messages.last
 	end
+	
 end
