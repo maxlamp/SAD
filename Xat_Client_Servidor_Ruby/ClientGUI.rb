@@ -23,8 +23,8 @@ class ClientGUI < Gtk::Window
 		#TextView de moment label
 		@msgs=Gtk::Label.new()
 		@msgs.set_size_request(200,370)
-		#@msgs.set_editable(false)
-		#@msgs.set_cursor_visible(false)
+		@msgs.set_xalign(0)
+		@msgs.set_yalign(0)
 		@grid.attach(@msgs,2,0,3,4)
 	
 		#TextView

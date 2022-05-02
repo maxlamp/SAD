@@ -45,7 +45,8 @@ class Server
 	                		@connections[:clients][option[1]] = client
 	                	end
 	                	
-	                when 'join'                
+	                when 'join'
+	               		t = true                
 	                	if @connections[:rooms].empty?
 	     			 	client.puts "No rooms"
 	    	 		else
@@ -53,14 +54,17 @@ class Server
 	    	 			@connections[:rooms].each do |room, participants|
 	    	 				if room.getRoomName == roomName
 	    	 					participants << client
-	    	 					room.addParticipants (option[1])
+	    	 					room.addParticipants (option[3])
 	    	 					@connections[:rooms][room] = participants
 	    	 					puts "#{option[3]} has joined the room #{roomName}\n"
-	    	 					client.puts "Ok/#{room.getRoomName}"
-	    	 			         else
-	    	 			         	client.puts 'No existeix'
+	    	 					client.puts "Ok/#{room.getRoomName}/#{room.getCreator}"
+	    	 			         
+	    	 			         	t = false
 	    	 			         end
 	    	 			end
+	    	 		end
+	    	 		if t
+	    	 			client.puts 'No existeix'	    	 		
 	    	 		end
 	    	 			            
 	                when 'create'		             
@@ -83,7 +87,7 @@ class Server
 		     			client.puts(room.getRoomName)  
                 		end
                 
-	                when 'room'	
+	                when 'room'
 		                #msg <--> option[4]
 		                #username <--> option[3]	                 
 		            	@connections[:rooms].each do |room, participants|
@@ -91,9 +95,9 @@ class Server
 			            		room.addMessage(option[3], option[4])
 			            		participants.each do |c|
 			            			unless c == client
-								puts "#{option[3]} has sent a message to #{c} // Message: #{option[4]}"
-								c.puts(getRoomMessages(room.getRoomName))
+								c.puts("room/#{room.getRoomName}/name/#{option[3]}/#{option[4]}")					
 	            					end
+	            				
 	            				end
 	            			end
 	           	 	end

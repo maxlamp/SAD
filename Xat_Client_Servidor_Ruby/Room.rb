@@ -6,7 +6,7 @@ class Room
 		@creator = creatorName
 		@participants = Array.new
 		@participants << creatorName
-		@messages = Array.new
+		@messages = "#{@roomName.upcase}\n"
 	end
 	
 	def getRoomDetails (client)
@@ -39,11 +39,10 @@ class Room
 		@messages << "#{username}: #{message}\n"
 	end
 	
-	def getMessages
+	def getMessage
 		return @messages
 	end
-	
 	def getCreator
-		return @creator
+	return @creator
 	end
 end
