@@ -16,7 +16,7 @@ class Client
         @username = nil
         @roomactual = nil
         @i = 0
-        @rooms = Array.new
+        @rooms = Hash.new
         @msgs = Array.new
         finestraLog
     end
@@ -40,7 +40,7 @@ class Client
 
     def listen
         @response = Thread.new do
-        puts 'entro al thread' 
+        puts "entro al thread//#{@response}" 
             loop {
                 msg = @server.gets.chomp
                 if msg == nil
@@ -48,7 +48,7 @@ class Client
                 end
                 if msg != nil          
                 	if msg.split('/')[0] == 'room'
-                		@rooms.each do |room|
+                		@rooms.each_key do |room|
 		        		if msg.split('/')[1] == room.getRoomName
 	   					room.addMessage(msg.split('/')[3],msg.split('/')[4])
 	   					if room.getRoomName == @roomactual.getRoomName
@@ -62,6 +62,7 @@ class Client
                 end 
             }
         end
+        return @response
     end
     
     def login    
@@ -72,7 +73,7 @@ class Client
 		    	@username = msg	
 			finestraUsr
 			if @rooms != nil
-				@rooms.each do |r|
+				@rooms.each_key do |r|
 					addRoom(r)
 				end
 			end
@@ -89,6 +90,7 @@ class Client
 	@win.addThing(@button)
         @win.signal_connect('destroy') { @win.destroy }
         @win.show_all
+        Gtk.main
 
     end
     
@@ -113,7 +115,7 @@ class Client
 	#listen
 	@win2.signal_connect('destroy') {Gtk.main_quit}
 	@win2.show_all
-	Gtk.main
+	Gtk.main_iteration
 
     end
     
@@ -128,7 +130,7 @@ class Client
     	@wjoin.addBoto(@bjoin)
     	@wjoin.signal_connect('destroy') {@wjoin.destroy}
     	@wjoin.show_all
-    	Gtk.main
+    	Gtk.main_iteration
     	
     end
     def createroom
@@ -138,13 +140,13 @@ class Client
     	@wc.addBoto(@bc)
     	@wc.signal_connect('destroy') {@wc.destroy}
     	@wc.show_all
-    	Gtk.main
+    	Gtk.main_iteration
 
     end
     def addroom(r)
    	@b = Gtk::Button.new(label: r)
    	@b.signal_connect('clicked') {
-   	@rooms.each do |room|
+   	@rooms.each_key do |room|
 		if room.getRoomName == r  
 			@roomactual = room
 			updateMis(@roomactual.getMessage)
@@ -158,7 +160,16 @@ class Client
     end
     
     def joinRoomButton
-    	listen
+    	if @roomactual == nil
+    		t = listen
+    	else
+    		@rooms.each do |room, thread|
+    			if room.getRoomName == @roomactual.getRoomName
+    				thread.kill
+    				t = listen
+    			end
+    		end
+    	end
     	roomName = @wjoin.getText
     	@server.puts("join/#{roomName}/name/#{@username}")
     	resp = @server.gets.chomp
@@ -173,25 +184,33 @@ class Client
 	    		@wjoin.destroy
 	    		addroom(resp.split("/")[1])
 	    		@roomactual = Room.new(@rooms.length, resp.split("/")[1], @username)
-	    		@rooms << @roomactual
+	    		@rooms.store(@roomactual,t)
 	    		updateMis(@roomactual.getMessage)
     		end
     	end
     end
     
     def createRoomButton
-    		listen
+    	if @roomactual == nil
+    		t = listen
+    	else
+    		@rooms.each do |room, thread|
+    			if room.getRoomName == @roomactual.getRoomName
+    				thread.kill
+    				t = listen
+    			end
+    		end
+    	end
     		create = @wc.getText
     		@server.puts("create/#{create}/name/#{@username}")
     		resp = @server.gets.chomp
 	    	if resp == 'Fail'
 	    		@wc.changelabel("There is a room with this name. Pleas try again with another name, thank you!")
-	    	else
+	    	else	
 	    		@wc.destroy
 	    		addroom(resp)
 	    		@roomactual  = Room.new(@rooms.length, create, @username)
-			@rooms << @roomactual
-
+			@rooms.store(@roomactual,t)
 	    		updateMis(@roomactual.getMessage)
 	    	end 
     end
@@ -200,5 +219,5 @@ end
 if __FILE__ == $0
 	server = TCPSocket.open("localhost", 5050)
 	Client.new(server)
-	Gtk.main
+	#Gtk.main
 end
