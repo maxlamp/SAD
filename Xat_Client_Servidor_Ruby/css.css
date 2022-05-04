@@ -1,0 +1,23 @@
+window {
+	background-color: #9DDFCD;
+	
+}
+textview {
+	background-color:  #C8F1E6;
+	color: black;
+}
+button {
+	background-color:  #C8F1E6;
+	padding: 10px;
+	border: 1px solid grey;
+	border-radius: 5px;
+	color: black;
+}
+label {
+	color: black;
+	font-size: 15px;
+}
+list{
+	background-color: #C8F1E6;
+
+}
